@@ -31,7 +31,7 @@ jobs:
 
   create-tag:
     needs: check-latest-release
-    if: needs.check-latest-release.outputs.release != ''
+    if: needs.check-latest-release.outputs.release
     name: Create shallow tag
     runs-on: ubuntu-latest
     steps:
