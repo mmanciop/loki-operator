@@ -11,7 +11,7 @@ jobs:
     name: Detect new releases
     runs-on: ubuntu-latest
     outputs:
-      release: ${{steps.check-new-release.outputs.new_release}}
+      release: ${{steps.check-new-release.outputs.release}}
     steps:
       # Find out what is the latest release of grafana/loki
       - id: loki-latest-release
@@ -27,7 +27,7 @@ jobs:
       - id: check-new-release
         name: Check for new releases
         run: |
-          echo "::set-output new_release=$(git show-ref --tags promtail-${{steps.loki-latest-release.outputs.release}} --quiet }} && echo -n '' || echo '${{ steps.loki-latest-release.outputs.release }}' )"
+          echo "::set-output release=$(git show-ref --tags promtail-${{steps.loki-latest-release.outputs.release}} --quiet }} && echo -n '' || echo '${{ steps.loki-latest-release.outputs.release }}' )"
 
   create-tag:
     needs: check-latest-release
