@@ -26,7 +26,7 @@ jobs:
       - id: find-files
         name: List files
         run: |
-          find / -name *.yaml
+          find .
       - id: check-new-release
         name: Check for new releases
         run: |
