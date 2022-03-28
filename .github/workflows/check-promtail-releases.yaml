@@ -11,7 +11,7 @@ jobs:
     name: Detect new releases
     runs-on: ubuntu-latest
     outputs:
-      release: ${{steps.check-new-release.outputs.release}}
+      release: ${{steps.check-new-release.outputs.new_release}}
     steps:
       # Find out what is the latest release of grafana/loki
       - id: loki-latest-release
