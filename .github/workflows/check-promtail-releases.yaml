@@ -29,8 +29,22 @@ jobs:
         run: |
           echo "::set-output new_release=$(git show-ref --tags promtail-${{steps.loki-latest-release.outputs.release}} --quiet }} && echo -n '' || echo '${{ steps.loki-latest-release.outputs.release }}' )"
 
-  trigger-build:
-    uses: ./.github/workflows/build-promtail-release.yaml
+  create-tag:
     needs: release-check
-    with:
-      release: ${{needs.release-check.outputs.release}}
+    if: ${{ needs.release-check.outputs.release != '' }}
+    name: Create shallow tag
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout grafana/loki
+        uses: actions/checkout@v2
+        with:
+          repository: grafana/loki
+          ref: ${{needs.release-check.outputs.release}}
+          fetch-depth: 0
+
+  # trigger-build:
+  #   uses: ./.github/workflows/build-promtail-release.yaml
+  #   needs: create-tag
+  #   if: ${{ needs.release-check.outputs.release != '' }}
+  #   with:
+  #     release: ${{needs.release-check.outputs.release}}
