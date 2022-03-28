@@ -30,10 +30,14 @@ jobs:
       - id: check-new-release
         name: Check for new releases
         run: |
-          git show-ref --tags promtail-${{steps.loki-latest-release.outputs.release}} --quiet
+          echo "::set-output new_release=$(git show-ref --tags promtail-${{steps.loki-latest-release.outputs.release}} --quiet }} || echo -n '')"
+
+  trigger-build:
+    name: Build Promtail statically
+    runs-on: ubuntu-latest
+    steps:
       - name: Trigger release build
         # If we do not have the tag we expect, trigger the new build
-        if: ${{ failure() }}
+        if: ${{ steps.loki-latest-release.outputs.release != '' }}
         uses: ./.github/workflows/build-promtail-static-release.yaml
-        with:
-          upstream_promtail_release: ${{steps.loki-latest-release.outputs.release}}
+        run: "echo ${{steps.loki-latest-release.outputs.release}}"
