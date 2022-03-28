@@ -26,7 +26,9 @@ jobs:
           fetch-depth: 0
       - id: check
         name: Check for new releases
-        run: echo "::set-output release=$(git show-ref --tags promtail-${{steps.loki-latest-release.outputs.release}} --quiet }} && echo -n '' || echo '${{ steps.loki-latest-release.outputs.release }}' )"
+        run: |
+          release=$(git show-ref --tags promtail-${{steps.loki-latest-release.outputs.release}} --quiet }} && echo -n '' || echo '${{ steps.loki-latest-release.outputs.release }}' )
+          echo "::set-output release='${release}'"
 
   create-tag:
     name: Create shallow tag
