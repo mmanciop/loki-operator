@@ -27,8 +27,13 @@ jobs:
       - id: check
         name: Check for new releases
         run: |
-          release=$(git show-ref --tags promtail-${{steps.loki-latest-release.outputs.release}} --quiet }} && echo -n '' || echo '${{ steps.loki-latest-release.outputs.release }}' )
-          echo "::set-output name=release::${release}"
+          release=$(git show-ref --tags promtail-${{steps.loki-latest-release.outputs.release}} --quiet }} && echo -n '' || echo '${{ steps.loki-latest-release.outputs.release }}' )promtail-v2.4.2
+          if [ -n "${release}" ]; then
+            echo "::set-output name=release::${release}"
+            echo "New upstream release ${{steps.loki-latest-release.outputs.release}} found"
+          else
+            echo "No new upstream release found"
+          fi
 
   trigger-build:
     uses: ./.github/workflows/build-promtail-release.yaml
