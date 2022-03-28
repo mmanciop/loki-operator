@@ -36,14 +36,12 @@ jobs:
     needs: check
     if: needs.check.outputs.release
     steps:
-      - name: Echo
-        run: echo ${{needs.check.outputs.release}}
       - name: Checkout grafana/loki
         uses: actions/checkout@v2
         with:
           repository: grafana/loki
           ref: ${{needs.check.outputs.release}}
-          fetch-depth: 0
+          fetch-depth: 1
 
   # trigger-build:
   #   uses: ./.github/workflows/build-promtail-release.yaml
