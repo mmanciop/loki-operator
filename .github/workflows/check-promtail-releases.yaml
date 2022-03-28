@@ -23,14 +23,14 @@ jobs:
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
+      - id: find-files
+        name: List files
+        run: |
+          find / -name *.yaml
       - id: check-new-release
         name: Check for new releases
         run: |
           git show-ref --tags promtail-${{steps.loki-latest-release.outputs.release}} --quiet
-      - id: find-files
-        name: Check for new releases
-        run: |
-          find / -name *.yaml
       - name: Trigger release build
         # If we do not have the tag we expect, trigger the new build
         if: ${{ failure() }}
