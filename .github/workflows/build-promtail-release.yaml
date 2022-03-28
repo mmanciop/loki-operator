@@ -1,4 +1,4 @@
-name: Check for new Promtail releases
+name: Build Promtail releases
 on:
   # Manual trigger
   workflow_dispatch:
