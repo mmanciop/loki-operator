@@ -27,6 +27,11 @@ jobs:
         name: Check for new releases
         run: |
           echo "::set-output new_release=$(git show-ref --tags promtail-${{steps.loki-latest-release.outputs.release}} --quiet || echo -n ${{steps.loki-latest-release.outputs.release}})"
+      - name: Check if we can access output
+        run: |
+          echo "${{ !!steps.check-new-release.outputs.new_release }}"
+          echo "${{ steps.check-new-release.outputs.new_release }}"
+          echo "${{ steps.check-new-release.outputs.new_release != '' }}"
       - name: Trigger release build
         if: ${{ !!steps.check-new-release.outputs.new_release }}
         uses: ./.github/workflows/build-promtail-static-release.yaml
