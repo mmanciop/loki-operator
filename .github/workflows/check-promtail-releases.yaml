@@ -31,10 +31,12 @@ jobs:
 
   create-tag:
     needs: check-latest-release
-    if: needs.check-latest-release.outputs.release
+    # if: needs.check-latest-release.outputs.release
     name: Create shallow tag
     runs-on: ubuntu-latest
     steps:
+      - name: Echo
+        run: echo ${{needs.check-latest-release.outputs.release}}
       - name: Checkout grafana/loki
         uses: actions/checkout@v2
         with:
