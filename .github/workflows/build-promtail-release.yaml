@@ -9,10 +9,16 @@ on:
 
 jobs:
   build:
-    name: Build Promtail statically
+    name: Create shallow tag
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger release build
-        # If we do not have the tag we expect, trigger the new build
-        #if: ${{ steps.loki-latest-release.outputs.release != '' }}
-        run: "echo ${{inputs.release}}"
+      - name: Checkout grafana/loki, tag ${{needs.check.outputs.release}}
+        uses: actions/checkout@v2
+        with:
+          repository: grafana/loki
+          ref: ${{needs.check.outputs.release}}
+          fetch-depth: 1
+      # - name: Trigger release build
+      #   # If we do not have the tag we expect, trigger the new build
+      #   #if: ${{ steps.loki-latest-release.outputs.release != '' }}
+      #   run: "echo ${{inputs.release}}"

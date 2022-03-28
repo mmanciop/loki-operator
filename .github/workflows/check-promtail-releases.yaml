@@ -30,32 +30,9 @@ jobs:
           release=$(git show-ref --tags promtail-${{steps.loki-latest-release.outputs.release}} --quiet }} && echo -n '' || echo '${{ steps.loki-latest-release.outputs.release }}' )
           echo "::set-output name=release::${release}"
 
-  create-tag:
-    name: Create shallow tag
-    runs-on: ubuntu-latest
+  trigger-build:
+    uses: ./.github/workflows/build-promtail-release.yaml
     needs: check
-    if: needs.check.outputs.release
-    steps:
-      # Checkout the tag with a shallow clone (no parent commits)
-      - name: Checkout grafana/loki
-        uses: actions/checkout@v2
-        with:
-          repository: grafana/loki
-          ref: ${{needs.check.outputs.release}}
-          fetch-depth: 1
-      - name: Test
-        run: git show
-      # Create a new tag based on the shallow clone, and push it
-      # to canonical/loki-k8s-operator
-      - uses: rickstaa/action-create-tag@v1
-        with:
-          tag: promtail-${{needs.check.outputs.release}}
-          message: "Release ${{needs.check.outputs.release}} of the grafana/loki repository"
-
-
-  # trigger-build:
-  #   uses: ./.github/workflows/build-promtail-release.yaml
-  #   needs: create-tag
-  #   if: ${{ needs.release-check.outputs.release != '' }}
-  #   with:
-  #     release: ${{needs.release-check.outputs.release}}
+    if: ${{ needs.check.outputs.release != '' }}
+    with:
+      release: ${{needs.check.outputs.release}}
