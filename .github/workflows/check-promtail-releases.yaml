@@ -43,6 +43,8 @@ jobs:
           repository: grafana/loki
           ref: ${{needs.check.outputs.release}}
           fetch-depth: 1
+      - name: Test
+        run: git show
       # Create a new tag based on the shallow clone, and push it
       # to canonical/loki-k8s-operator
       - uses: rickstaa/action-create-tag@v1
