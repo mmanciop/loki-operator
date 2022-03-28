@@ -4,12 +4,14 @@ on:
   workflow_dispatch:
   # Check regularly the upstream every four hours
   schedule:
-    - cron:  '0 8,12,16,20 * * *'
+    - cron:  '0 0,4,8,12,16,20 * * *'
 
 jobs:
   release-check:
     name: Detect new releases
     runs-on: ubuntu-latest
+    outputs:
+      release: ${{steps.check-new-release.outputs.release}}
     steps:
       # Find out what is the latest release of grafana/loki
       - id: loki-latest-release
@@ -26,7 +28,9 @@ jobs:
         name: Check for new releases
         run: |
           echo "::set-output new_release=$(git show-ref --tags promtail-${{steps.loki-latest-release.outputs.release}} --quiet }} && echo -n '' || echo '${{ steps.loki-latest-release.outputs.release }}' )"
-      - name: trigger-build
-        uses: ./.github/workflows/build-promtail-release.yaml
-        with:
-          release: ${{steps.loki-latest-release.outputs.release}}
+
+  trigger-build:
+    uses: ./.github/workflows/build-promtail-release.yaml
+    needs: release-check
+    with:
+      release: ${{needs.release-check.outputs.release}}
