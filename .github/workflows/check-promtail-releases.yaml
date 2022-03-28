@@ -1,5 +1,4 @@
-name: Detect new Promtail releases
-
+name: Check for new Promtail releases and build
 on:
   # Manual trigger
   workflow_dispatch:
@@ -35,5 +34,5 @@ jobs:
     steps:
       - name: Trigger release build
         # If we do not have the tag we expect, trigger the new build
-        if: ${{ steps.loki-latest-release.outputs.release != '' }}
+        #if: ${{ steps.loki-latest-release.outputs.release != '' }}
         run: "echo ${{steps.loki-latest-release.outputs.release}}"
