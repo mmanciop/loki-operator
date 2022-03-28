@@ -34,6 +34,6 @@ jobs:
       - name: Trigger release build
         # If we do not have the tag we expect, trigger the new build
         if: ${{ failure() }}
-        uses: ./.github/workflows/build-promtail-static-release.yaml@main
+        uses: ./.github/workflows/build-promtail-static-release.yaml
         with:
           upstream_promtail_release: ${{steps.loki-latest-release.outputs.release}}
