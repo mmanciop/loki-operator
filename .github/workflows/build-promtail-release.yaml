@@ -45,6 +45,8 @@ jobs:
         run: |
           initial_operator_commit=$(cd ./loki-k8s-operator && git log main --oneline | tail -1 | awk '{ print $1 }')
           cd ./loki-upstream
+          git config user.name github-actions
+          git config user.email github-actions@github.com
           git remote add charm ../loki-k8s-operator
           git fetch charm
           git rebase 5394be8 --strategy-option ours
