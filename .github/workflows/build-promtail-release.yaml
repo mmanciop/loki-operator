@@ -11,6 +11,7 @@ permissions:
   contents: write
 
 jobs:
+
   build:
     name: Create shallow tag
     runs-on: ubuntu-latest
@@ -35,18 +36,29 @@ jobs:
         run: |
           cp ./loki-k8s-operator/promtail-build/static/goreleaser.yml ./promtail-static-goreleaser.yml
       - name: Create shallow tag
-        # TODO FIX SHALLOW TAG PUSH
+        # We rebase the commit from the release tag from the upstream loki
+        # repository on the initial commit of canonical/loki-k8s-operator,
+        # because GitHub does not allow us to push a shallow tag (tag to a
+        # commit with no parent), so we "reconcile" the history of the
+        # two repositories to have the initial commit of canonical/loki-k8s-operator
+        # as common history.
         run: |
+          initial_operator_commit=$(cd ../loki-k8s-operator && git log main --oneline | tail -1 | awk '{ print $1 }')
           cd ./loki-upstream
-          git tag ${RELEASE}
           git remote add charm ../loki-k8s-operator
+          git fetch charm
+          git rebase 5394be8 --strategy-option ours
+          git tag ${RELEASE}
           git push charm ${RELEASE}
-          cd ../loki-k8s-operator
-          git checkout ${RELEASE}
       - name: Set up Go
         uses: actions/setup-go@v2
         with:
           go-version: 1.18
+      - name: Check out new promtail-${{inputs.release}} tag
+        # Prepare the ./loki-k8s-operator repository for the Goreleaser run
+        run: |
+          cd ./loki-k8s-operator
+          git checkout ${RELEASE}
       - name: Build Promtail
         uses: goreleaser/goreleaser-action@v2
         with:
@@ -54,8 +66,6 @@ jobs:
           version: latest
           workdir: ./loki-k8s-operator
           args: build --rm-dist --config ../promtail-static-goreleaser.yml
-        # env:
-        #   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Attach promtail-amd64 artifact to run
         uses: actions/upload-artifact@v3
         with:
@@ -66,6 +76,7 @@ jobs:
         with:
           name: promtail-arm64
           path: ./loki-k8s-operator/dist/loki_linux_arm64/promtail
+
   test:
     name: Test Promtail
     runs-on: ubuntu-latest
@@ -87,10 +98,11 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
       - name: Build and test ${{matrix.base}} image
+        # If promtail is borked on this base, the next command will fail
         run: |
           docker build . -f promtail-build/static/test/Dockerfile.${{matrix.base}} -t promtail-${{matrix.base}}
-          # If promtail is borked on this base, the next command will fail
           docker run promtail-${{matrix.base}}
+
   # publish:
   #   name: Publish promtail resources to CharmHub.io
   #   runs-on: ubuntu-latest
