@@ -27,7 +27,6 @@ jobs:
       - name: Checkout canonical/loki-k8s-operator
         uses: actions/checkout@v2
         with:
-          repository: canonical/loki-k8s-operator
           fetch-depth: 0
           path: ./loki-k8s-operator
       - name: Prepare Goreleaser configurations
