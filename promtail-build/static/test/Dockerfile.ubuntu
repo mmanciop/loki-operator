@@ -1,0 +1,5 @@
+FROM ubuntu
+
+ADD ./dist/loki_linux_amd64/promtail /app/promtail
+
+ENTRYPOINT ["/app/promtail", "--version"]

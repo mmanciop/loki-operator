@@ -1,6 +1,8 @@
 build:
   main: ./clients/cmd/promtail
   binary: promtail
+  env:
+    - CGO_ENABLED=0
   goos:
     - linux
   goarch:

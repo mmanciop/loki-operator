@@ -33,9 +33,9 @@ jobs:
         # Store the Goreleaser configs for Promtail outside of the
         # working dir, as we will override that with the tag
         run: |
-          find .
-          cp ./loki-k8s-operator/promtail-goreleaser.yml .
+          cp ./loki-k8s-operator/promtail-build/static/goreleaser.yml ./promtail-static-goreleaser.yml
       - name: Create shallow tag
+        # TODO FIX SHALLOW TAG PUSH
         run: |
           cd ./loki-upstream
           git tag ${RELEASE}
@@ -53,12 +53,63 @@ jobs:
           distribution: goreleaser
           version: latest
           workdir: ./loki-k8s-operator
-          args: release --rm-dist --config ../promtail-goreleaser.yml
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CGO_ENABLED: 0
-
-      # - name: Trigger release build
-      #   # If we do not have the tag we expect, trigger the new build
-      #   #if: ${{ steps.loki-latest-release.outputs.release != '' }}
-      #   run: "echo ${{inputs.release}}"
+          args: build --rm-dist --config ../promtail-static-goreleaser.yml
+        # env:
+        #   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Attach promtail-amd64 artifact to run
+        uses: actions/upload-artifact@v3
+        with:
+          name: promtail-amd64
+          path: ./loki-k8s-operator/dist/loki_linux_amd64/promtail
+      - name: Attach promtail-arm64 artifact to run
+        uses: actions/upload-artifact@v3
+        with:
+          name: promtail-arm64
+          path: ./loki-k8s-operator/dist/loki_linux_arm64/promtail
+  test:
+    name: Test Promtail
+    runs-on: ubuntu-latest
+    needs: build
+    # TODO: Also run tests on arm64
+    strategy:
+      matrix:
+        base: [alpine, debian, rb-ubi8, scratch, ubuntu]
+    steps:
+      - name: Checkout canonical/loki-k8s-operator
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Download promtail-amd64
+        uses: actions/download-artifact@v3
+        with:
+          name: promtail-amd64
+          path: ./dist/loki_linux_amd64/promtail
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      - name: Build and test ${{matrix.base}} image
+        run: |
+          docker build . -f promtail-build/static/test/Dockerfile.${{matrix.base}} -t promtail-${{matrix.base}}
+          # If promtail is borked on this base, the next command will fail
+          docker run promtail-${{matrix.base}}
+  # publish:
+  #   name: Publish promtail resources to CharmHub.io
+  #   runs-on: ubuntu-latest
+  #   needs: test
+  #   steps:
+  #     - name: Install charmcraft
+  #       run: |
+  #         sudo snap install charmcraft --classic
+  #     - name: Upload amd64 assets
+  #       uses: actions/upload-artifact@v3
+  #       env:
+  #         CHARMCRAFT_AUTH: ${{ secrets.CHARMHUB_TOKEN }}
+  #       with:
+  #         name: promtail-amd64
+  #         path: ./loki-k8s-operator/dist/loki_linux_amd64/promtail
+  #     - name: Upload arm64 assets
+  #       uses: actions/upload-artifact@v3
+  #       env:
+  #         CHARMCRAFT_AUTH: ${{ secrets.CHARMHUB_TOKEN }}
+  #       with:
+  #         name: promtail-arm64
+  #         path: ./loki-k8s-operator/dist/loki_linux_arm64/promtail
