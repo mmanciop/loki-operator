@@ -35,49 +35,27 @@ jobs:
         # working dir, as we will override that with the tag
         run: |
           cp ./loki-k8s-operator/promtail-build/static/goreleaser.yml ./promtail-static-goreleaser.yml
-      - name: Create shallow tag
-        # We rebase the commit from the release tag from the upstream loki
-        # repository on the initial commit of canonical/loki-k8s-operator,
-        # because GitHub does not allow us to push a shallow tag (tag to a
-        # commit with no parent), so we "reconcile" the history of the
-        # two repositories to have the initial commit of canonical/loki-k8s-operator
-        # as common history.
-        run: |
-          initial_operator_commit=$(cd ./loki-k8s-operator && git log main --oneline | tail -1 | awk '{ print $1 }')
-          cd ./loki-upstream
-          git config user.name github-actions
-          git config user.email github-actions@github.com
-          git remote add charm ../loki-k8s-operator
-          git fetch charm
-          git rebase 5394be8 --strategy-option ours
-          git tag ${RELEASE}
-          git push charm ${RELEASE}
       - name: Set up Go
         uses: actions/setup-go@v2
         with:
           go-version: 1.18
-      - name: Check out new promtail-${{inputs.release}} tag
-        # Prepare the ./loki-k8s-operator repository for the Goreleaser run
-        run: |
-          cd ./loki-k8s-operator
-          git checkout ${RELEASE}
       - name: Build Promtail
         uses: goreleaser/goreleaser-action@v2
         with:
           distribution: goreleaser
           version: latest
-          workdir: ./loki-k8s-operator
-          args: build --rm-dist --config ../promtail-static-goreleaser.yml --snapshot
+          workdir: ./loki-upstream
+          args: build --rm-dist --config ../promtail-static-goreleaser.yml
       - name: Attach promtail-amd64 artifact to run
         uses: actions/upload-artifact@v3
         with:
           name: promtail-amd64
-          path: ./loki-k8s-operator/dist/loki_linux_amd64/promtail
+          path: ./loki-upstream/dist/loki_linux_amd64/promtail
       - name: Attach promtail-arm64 artifact to run
         uses: actions/upload-artifact@v3
         with:
           name: promtail-arm64
-          path: ./loki-k8s-operator/dist/loki_linux_arm64/promtail
+          path: ./loki-upstream/dist/loki_linux_arm64/promtail
 
   test:
     name: Test Promtail
@@ -105,11 +83,41 @@ jobs:
           docker build . -f promtail-build/static/test/Dockerfile.${{matrix.base}} -t promtail-${{matrix.base}}
           docker run promtail-${{matrix.base}}
 
-  # publish:
-  #   name: Publish promtail resources to CharmHub.io
-  #   runs-on: ubuntu-latest
-  #   needs: test
-  #   steps:
+  publish:
+    name: Publish promtail resources to CharmHub.io
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Checkout grafana/loki, tag ${{inputs.release}}
+        uses: actions/checkout@v2
+        with:
+          repository: grafana/loki
+          ref: ${{inputs.release}}
+          fetch-depth: 1
+          path: ./loki-upstream
+      - name: Checkout canonical/loki-k8s-operator
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          path: ./loki-k8s-operator
+      - name: Create shallow tag
+        # We rebase the commit from the release tag from the upstream loki
+        # repository on the initial commit of canonical/loki-k8s-operator,
+        # because GitHub does not allow us to push a shallow tag (tag to a
+        # commit with no parent), so we "reconcile" the history of the
+        # two repositories to have the initial commit of canonical/loki-k8s-operator
+        # as common history.
+        run: |
+          initial_operator_commit=$(cd ./loki-k8s-operator && git log main --oneline | tail -1 | awk '{ print $1 }')
+          cd ./loki-upstream
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git remote add charm ../loki-k8s-operator
+          git fetch charm
+          git rebase 5394be8 --strategy-option ours
+          git tag ${RELEASE}
+          git push charm ${RELEASE}
+
   #     - name: Install charmcraft
   #       run: |
   #         sudo snap install charmcraft --classic
