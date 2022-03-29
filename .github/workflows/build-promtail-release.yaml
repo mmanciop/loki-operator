@@ -34,6 +34,7 @@ jobs:
         # Store the Goreleaser configs for Promtail outside of the
         # working dir, as we will override that with the tag
         run: |
+          find .
           cp ./loki-k8s-operator/promtail-goreleaser.yml .
       - name: Create shallow tag
         run: |
