@@ -120,24 +120,40 @@ jobs:
           git fetch charm
           git rebase "${initial_operator_commit}" --strategy-option ours
           git tag "${RELEASE}"
-          git push charm "${RELEASE}"
-
-        # TODO Push upstream
-
-  #     - name: Install charmcraft
-  #       run: |
-  #         sudo snap install charmcraft --classic
-  #     - name: Upload amd64 assets
-  #       uses: actions/upload-artifact@v3
-  #       env:
-  #         CHARMCRAFT_AUTH: ${{ secrets.CHARMHUB_TOKEN }}
-  #       with:
-  #         name: promtail-amd64
-  #         path: ./loki-k8s-operator/dist/loki_linux_amd64/promtail
-  #     - name: Upload arm64 assets
-  #       uses: actions/upload-artifact@v3
-  #       env:
-  #         CHARMCRAFT_AUTH: ${{ secrets.CHARMHUB_TOKEN }}
-  #       with:
-  #         name: promtail-arm64
-  #         path: ./loki-k8s-operator/dist/loki_linux_arm64/promtail
+          git push origin "${RELEASE}"
+      - name: Download the promtail-amd64 artefact
+        uses: actions/download-artifact@v3
+        with:
+          name: promtail-amd64
+          path: ./dist/loki_linux_amd64/
+      - name: Download the promtail-arm64 artefact
+        uses: actions/download-artifact@v3
+        with:
+          name: promtail-arm64
+          path: ./dist/loki_linux_arm64/
+      - name: Create GitHub release
+        uses: ncipollo/release-action@v1
+        with:
+          name: "Promtail ${{inputs.release}}"
+          body: |
+            Statically-linked builds for Promtail, based on the [upstream '${{inputs.release}}'](https://github.com/grafana/loki/releases/tag/${{inputs.release}}) release of the `grafana/loki` project.
+          artifacts: ./dist/*
+          tag: promtail-${{inputs.release}}
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Install charmcraft
+        run: |
+          sudo snap install charmcraft --classic
+      - name: Upload amd64 assets
+        uses: actions/upload-artifact@v3
+        env:
+          CHARMCRAFT_AUTH: ${{ secrets.CHARMHUB_TOKEN }}
+        with:
+          name: promtail-amd64
+          path: ./loki-k8s-operator/dist/loki_linux_amd64/promtail
+      - name: Upload arm64 assets
+        uses: actions/upload-artifact@v3
+        env:
+          CHARMCRAFT_AUTH: ${{ secrets.CHARMHUB_TOKEN }}
+        with:
+          name: promtail-arm64
+          path: ./loki-k8s-operator/dist/loki_linux_arm64/promtail
