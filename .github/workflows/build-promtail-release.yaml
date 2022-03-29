@@ -67,7 +67,7 @@ jobs:
           distribution: goreleaser
           version: latest
           workdir: ./loki-k8s-operator
-          args: build --rm-dist --config ../promtail-static-goreleaser.yml
+          args: build --rm-dist --config ../promtail-static-goreleaser.yml --snapshot
       - name: Attach promtail-amd64 artifact to run
         uses: actions/upload-artifact@v3
         with:
