@@ -114,9 +114,11 @@ jobs:
           git config user.email github-actions@github.com
           git remote add charm ../loki-k8s-operator
           git fetch charm
-          git rebase 5394be8 --strategy-option ours
+          git rebase "${initial_operator_commit}" --strategy-option ours
           git tag ${RELEASE}
           git push charm ${RELEASE}
+
+        # TODO Push upstream
 
   #     - name: Install charmcraft
   #       run: |
