@@ -115,8 +115,8 @@ jobs:
           git remote add charm ../loki-k8s-operator
           git fetch charm
           git rebase "${initial_operator_commit}" --strategy-option ours
-          git tag ${RELEASE}
-          git push charm ${RELEASE}
+          git tag "${RELEASE}"
+          git push charm "${RELEASE}"
 
         # TODO Push upstream
 
