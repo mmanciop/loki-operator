@@ -15,13 +15,13 @@ jobs:
     name: Create shallow tag
     runs-on: ubuntu-latest
     env:
-      RELEASE: promtail-${{needs.check.outputs.release}}
+      RELEASE: promtail-${{inputs.release}}
     steps:
-      - name: Checkout grafana/loki, tag ${{needs.check.outputs.release}}
+      - name: Checkout grafana/loki, tag ${{inputs.release}}
         uses: actions/checkout@v2
         with:
           repository: grafana/loki
-          ref: ${{needs.check.outputs.release}}
+          ref: ${{inputs.release}}
           fetch-depth: 1
           path: ./loki-upstream
       - name: Checkout canonical/loki-k8s-operator
@@ -44,7 +44,7 @@ jobs:
         uses: goreleaser/goreleaser-action@v2
         with:
           distribution: goreleaser
-          version: ${RELEASE}
+          version: latest
           args: release --rm-dist
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
