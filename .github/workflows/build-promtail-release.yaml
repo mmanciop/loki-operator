@@ -30,6 +30,11 @@ jobs:
           repository: grafana/loki
           fetch-depth: 0
           path: ./loki-k8s-operator
+      - name: Prepare Goreleaser configurations
+        # Store the Goreleaser configs for Promtail outside of the
+        # working dir, as we will override that with the tag
+        run: |
+          cp ./loki-k8s-operator/promtail-goreleaser.yml .
       - name: Create shallow tag
         run: |
           cd ./loki-upstream
@@ -42,11 +47,6 @@ jobs:
         uses: actions/setup-go@v2
         with:
           go-version: 1.18
-      - name: Check out Goreleaser configurations
-        run: |
-          cd ../loki-k8s-operator
-          git checkout ${{github.ref}} -- promtail-goreleaser.yml
-          cp promtail-goreleaser.yml ../
       - name: Build Promtail
         uses: goreleaser/goreleaser-action@v2
         with:
