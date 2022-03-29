@@ -95,11 +95,11 @@ jobs:
       - name: Checkout grafana/loki, tag ${{inputs.release}}
         uses: actions/checkout@v2
         with:
-          repository: grafana/loki, ${{github.ref}}
+          repository: grafana/loki
           ref: ${{inputs.release}}
           fetch-depth: 1
           path: ./loki-upstream
-      - name: Checkout canonical/loki-k8s-operator
+      - name: Checkout canonical/loki-k8s-operator, ${{github.ref}}
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
