@@ -36,7 +36,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v2
         with:
-          go-version: 1.18
+          go-version: 1.17.8
       - name: Build Promtail
         uses: goreleaser/goreleaser-action@v2
         with:
@@ -63,7 +63,7 @@ jobs:
     strategy:
       matrix:
         arch: [amd64]
-        base: [alpine, debian, rb-ubi8, scratch, ubuntu]
+        base: [alpine, debian, rh-ubi8, scratch, ubuntu]
     steps:
       - name: Checkout canonical/loki-k8s-operator
         uses: actions/checkout@v2
@@ -74,9 +74,6 @@ jobs:
         with:
           name: promtail-${{matrix.arch}}
           path: ./dist/loki_linux_${{matrix.arch}}/
-      - name: Display structure of downloaded files
-        run: ls -R
-        working-directory: ./dist/loki_linux_${{matrix.arch}}/
       - name: Check the linkage of the Promtail binary
         run: |
           file ./dist/loki_linux_${{matrix.arch}}/promtail
