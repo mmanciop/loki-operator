@@ -120,6 +120,7 @@ jobs:
           git fetch charm
           git rebase "${initial_operator_commit}" --strategy-option ours
           git tag "${RELEASE}"
+          cd ../loki-k8s-operator
           git push origin "${RELEASE}"
       - name: Download the promtail-amd64 artefact
         uses: actions/download-artifact@v3
