@@ -78,7 +78,7 @@ jobs:
       - name: Build and test ${{matrix.base}} image
         # If promtail is borked on this base, the next command will fail
         run: |
-          docker build . -f promtail-build/static/test/Dockerfile.${{matrix.base}} -t promtail-${{matrix.base}}
+          DOCKER_BUILDKIT=1 docker build . -f promtail-build/static/test/Dockerfile.${{matrix.base}} -t promtail-${{matrix.base}}
           docker run promtail-${{matrix.base}}
 
   publish:
