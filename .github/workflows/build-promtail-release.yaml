@@ -33,9 +33,9 @@ jobs:
       - name: Create shallow tag
         run: |
           cd ./loki-upstream
-          git tag ${{RELEASE}}
+          git tag ${RELEASE}
           git remote add charm ../loki-k8s-operator
-          git push charm ${{RELEASE}}
+          git push charm ${RELEASE}
       - name: Set up Go
         uses: actions/setup-go@v2
         with:
@@ -44,7 +44,7 @@ jobs:
         uses: goreleaser/goreleaser-action@v2
         with:
           distribution: goreleaser
-          version: ${{RELEASE}}
+          version: ${RELEASE}
           args: release --rm-dist
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
