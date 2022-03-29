@@ -43,7 +43,7 @@ jobs:
         # two repositories to have the initial commit of canonical/loki-k8s-operator
         # as common history.
         run: |
-          initial_operator_commit=$(cd ../loki-k8s-operator && git log main --oneline | tail -1 | awk '{ print $1 }')
+          initial_operator_commit=$(cd ./loki-k8s-operator && git log main --oneline | tail -1 | awk '{ print $1 }')
           cd ./loki-upstream
           git remote add charm ../loki-k8s-operator
           git fetch charm
