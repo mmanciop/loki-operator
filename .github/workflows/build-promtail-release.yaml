@@ -18,6 +18,24 @@ jobs:
           repository: grafana/loki
           ref: ${{needs.check.outputs.release}}
           fetch-depth: 1
+          path: ./loki-upstream
+      - name: Checkout canonical/loki-k8s-operator
+        uses: actions/checkout@v2
+        with:
+          repository: grafana/loki
+          fetch-depth: 0
+          path: ./loki-k8s-operator
+      - name: Create shallow tag and push it to loki-k8s-operator
+        run: |
+          cd ./loki-upstream
+          tag="promtail-${{needs.check.outputs.release}}"
+          git tag ${tag}
+          git remote add charm ../loki-k8s-operator
+          git push charm ${tag}
+      - name: Validate tag
+        run: |
+          cd ./loki-k8s-operator
+          git show promtail-${{needs.check.outputs.release}}
       # - name: Trigger release build
       #   # If we do not have the tag we expect, trigger the new build
       #   #if: ${{ steps.loki-latest-release.outputs.release != '' }}
