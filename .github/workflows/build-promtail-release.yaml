@@ -73,6 +73,9 @@ jobs:
         with:
           name: promtail-amd64
           path: ./dist/loki_linux_amd64/promtail
+      - name: Check the linkage of the Promtail binary
+        run: |
+          file ./dist/loki_linux_amd64/promtail
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
       - name: Build and test ${{matrix.base}} image
