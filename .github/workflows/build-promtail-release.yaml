@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        arch: [amd64, arm64]
+        arch: &supported-architectures [amd64] # [amd64, arm64]
     steps:
       - name: Checkout grafana/loki, tag ${{inputs.release}}
         uses: actions/checkout@v2
@@ -41,6 +41,7 @@ jobs:
         # cross-build for the specified architecture
         run: |
           cd ./loki-upstream
+
           CGO_ENABLED=0 GOHOSTOS=linux GOARCH=${{matrix.arch}} make clients/cmd/promtail/promtail
 
           mkdir -p ./dist/loki_linux_${{matrix.arch}}
@@ -58,7 +59,7 @@ jobs:
     # TODO: Also run tests on arm64
     strategy:
       matrix:
-        arch: [amd64]
+        arch: *supported-architectures
         base: [alpine, debian, rh-ubi8, scratch, ubuntu]
     steps:
       - name: Checkout ${{github.repository}}
@@ -174,7 +175,7 @@ jobs:
     needs: release
     strategy:
       matrix:
-        arch: [amd64, arm64]
+        arch: *supported-architectures
     steps:
       - name: Install charmcraft
         run: |
