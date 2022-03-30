@@ -111,6 +111,13 @@ jobs:
         # commit with no parent), so we "reconcile" the history of the
         # two repositories to have the initial commit of canonical/loki-k8s-operator
         # as common history.
+        #
+        # We also remove the build automation from the tag, as that is not something
+        # we use, and if we left the .github folder, the pushing of the tag
+        # to canonical/loki-k8s-operator would fail with:
+        #
+        #  refusing to allow a GitHub App to create or update workflow \
+        #    `.github/workflows/backport.yml` without `workflows` permission
         run: |
           initial_operator_commit=$(cd ./loki-k8s-operator && git log main --oneline | tail -1 | awk '{ print $1 }')
           cd ./loki-upstream
