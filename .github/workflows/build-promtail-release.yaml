@@ -41,7 +41,7 @@ jobs:
         # cross-build for the specified architecture
         run: |
           cd ./loki-upstream
-          CGO_ENABLED=0 GOHOSTOS=linux GOARCH=${{matrix.arch}} make promtail
+          CGO_ENABLED=0 GOHOSTOS=linux GOARCH=${{matrix.arch}} make clients/cmd/promtail/promtail
 
           mkdir -p ./dist/loki_linux_${{matrix.arch}}
           mv clients/cmd/promtail/promtail ./dist/loki_linux_${{matrix.arch}}/
