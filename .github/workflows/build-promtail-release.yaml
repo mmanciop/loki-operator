@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        arch: &supported-architectures [amd64] # [amd64, arm64]
+        arch: [amd64] # [amd64, arm64] # GitHub workflows do not support YAML anchors :-(
     steps:
       - name: Checkout grafana/loki, tag ${{inputs.release}}
         uses: actions/checkout@v2
@@ -59,7 +59,7 @@ jobs:
     # TODO: Also run tests on arm64
     strategy:
       matrix:
-        arch: *supported-architectures
+        arch: [amd64] # [amd64, arm64]
         base: [alpine, debian, rh-ubi8, scratch, ubuntu]
     steps:
       - name: Checkout ${{github.repository}}
@@ -175,7 +175,7 @@ jobs:
     needs: release
     strategy:
       matrix:
-        arch: *supported-architectures
+        arch: [amd64] # [amd64, arm64]
     steps:
       - name: Install charmcraft
         run: |
