@@ -119,8 +119,28 @@ jobs:
           git remote add charm ../loki-k8s-operator
           git fetch charm
           git rebase "${initial_operator_commit}" --strategy-option ours
+
+          echo "Removing build automation from the commit"
+
+          git rm -rf .github || true
+          git rm -rf .circleci || true
+          git rm -rf .drone || true
+          git rm .golangci.yml || true
+
+          echo "Creating the new commit"
+
+          git commit --amend --no-edit
+
+          echo "Creating the new tag"
+
           git tag "${RELEASE}"
+
+          echo "Pushing the tag to the local canonical/loki-k8s-operator clone"
+
           git push charm "${RELEASE}"
+
+          echo "Pushing the tag to the upstream canonical/loki-k8s-operator repository"
+
           cd ../loki-k8s-operator
           git push origin "${RELEASE}"
       - name: Download the promtail-amd64 artefact
@@ -145,17 +165,17 @@ jobs:
       - name: Install charmcraft
         run: |
           sudo snap install charmcraft --classic
-      - name: Upload amd64 assets
-        uses: actions/upload-artifact@v3
-        env:
-          CHARMCRAFT_AUTH: ${{ secrets.CHARMHUB_TOKEN }}
-        with:
-          name: promtail-amd64
-          path: ./loki-k8s-operator/dist/loki_linux_amd64/promtail
-      - name: Upload arm64 assets
-        uses: actions/upload-artifact@v3
-        env:
-          CHARMCRAFT_AUTH: ${{ secrets.CHARMHUB_TOKEN }}
-        with:
-          name: promtail-arm64
-          path: ./loki-k8s-operator/dist/loki_linux_arm64/promtail
+      # - name: Upload amd64 assets
+      #   uses: actions/upload-artifact@v3
+      #   env:
+      #     CHARMCRAFT_AUTH: ${{ secrets.CHARMHUB_TOKEN }}
+      #   with:
+      #     name: promtail-amd64
+      #     path: ./loki-k8s-operator/dist/loki_linux_amd64/promtail
+      # - name: Upload arm64 assets
+      #   uses: actions/upload-artifact@v3
+      #   env:
+      #     CHARMCRAFT_AUTH: ${{ secrets.CHARMHUB_TOKEN }}
+      #   with:
+      #     name: promtail-arm64
+      #     path: ./loki-k8s-operator/dist/loki_linux_arm64/promtail
