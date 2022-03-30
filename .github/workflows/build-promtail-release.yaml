@@ -13,8 +13,11 @@ permissions:
 jobs:
 
   build:
-    name: Create shallow tag
+    name: Build statically-linked Promtail
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        arch: [amd64, arm64]
     steps:
       - name: Checkout grafana/loki, tag ${{inputs.release}}
         uses: actions/checkout@v2
@@ -28,32 +31,25 @@ jobs:
         with:
           fetch-depth: 0
           path: ./loki-k8s-operator
-      - name: Prepare Goreleaser configurations
-        # Store the Goreleaser configs for Promtail outside of the
-        # working dir, as we will override that with the tag
-        run: |
-          cp ./loki-k8s-operator/promtail-build/static/goreleaser.yml ./promtail-static-goreleaser.yml
       - name: Set up Go
         uses: actions/setup-go@v2
         with:
           go-version: 1.17.8
       - name: Build Promtail
-        uses: goreleaser/goreleaser-action@v2
-        with:
-          distribution: goreleaser
-          version: latest
-          workdir: ./loki-upstream
-          args: build --rm-dist --config ../promtail-static-goreleaser.yml
-      - name: Attach promtail-amd64 artifact to run
+        # We run the make-based build with CGO_ENABLED=0
+        # because we want statically-linked binaries and
+        # cross-build for the specified architecture
+        run: |
+          cd ./loki-upstream
+          CGO_ENABLED=0 GOHOSTOS=linux GOARCH=${{matrix.arch}} make promtail
+
+          mkdir -p ./dist/loki_linux_${{matrix.arch}}
+          mv clients/cmd/promtail/promtail ./dist/loki_linux_${{matrix.arch}}/
+      - name: Attach promtail-${{matrix.arch}} artifact to run
         uses: actions/upload-artifact@v3
         with:
-          name: promtail-amd64
-          path: ./loki-upstream/dist/loki_linux_amd64/promtail
-      - name: Attach promtail-arm64 artifact to run
-        uses: actions/upload-artifact@v3
-        with:
-          name: promtail-arm64
-          path: ./loki-upstream/dist/loki_linux_arm64/promtail
+          name: promtail-${{matrix.arch}}
+          path: ./loki-upstream/dist/loki_linux_${{matrix.arch}}/promtail
 
   test:
     name: Test Promtail
