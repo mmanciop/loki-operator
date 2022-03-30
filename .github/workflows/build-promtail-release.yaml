@@ -26,7 +26,7 @@ jobs:
           ref: ${{inputs.release}}
           fetch-depth: 1
           path: ./loki-upstream
-      - name: Checkout canonical/loki-k8s-operator
+      - name: Checkout ${{github.repository}}
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
@@ -61,7 +61,7 @@ jobs:
         arch: [amd64]
         base: [alpine, debian, rh-ubi8, scratch, ubuntu]
     steps:
-      - name: Checkout canonical/loki-k8s-operator
+      - name: Checkout ${{github.repository}}
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
@@ -81,8 +81,8 @@ jobs:
           DOCKER_BUILDKIT=1 docker build . -f promtail-build/static/test/Dockerfile.${{matrix.base}} -t promtail-${{matrix.base}}
           docker run promtail-${{matrix.base}}
 
-  publish:
-    name: Publish promtail resources to CharmHub.io
+  tag:
+    name: Publish Promtail release to ${{github.repository}}
     runs-on: ubuntu-latest
     needs: test
     env:
@@ -95,7 +95,7 @@ jobs:
           ref: ${{inputs.release}}
           fetch-depth: 1
           path: ./loki-upstream
-      - name: Checkout canonical/loki-k8s-operator, ${{github.ref}}
+      - name: Checkout ${{github.repository}}, ${{github.ref}}
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
@@ -138,47 +138,54 @@ jobs:
 
           git tag "${RELEASE}"
 
-          echo "Pushing the tag to the local canonical/loki-k8s-operator clone"
+          echo "Pushing the tag to the local ${{github.repository}} clone"
 
           git push charm "${RELEASE}"
 
-          echo "Pushing the tag to the upstream canonical/loki-k8s-operator repository"
+          echo "Pushing the tag to the upstream ${{github.repository}} repository"
 
           cd ../loki-k8s-operator
           git push origin "${RELEASE}"
-      - name: Download the promtail-amd64 artefact
+
+  release:
+    runs-on: ubuntu-latest
+    needs: tag
+    steps:
+      - name: Download the artefacts
         uses: actions/download-artifact@v3
         with:
-          name: promtail-amd64
-          path: ./dist/loki_linux_amd64/
-      - name: Download the promtail-arm64 artefact
-        uses: actions/download-artifact@v3
-        with:
-          name: promtail-arm64
-          path: ./dist/loki_linux_arm64/
+          path: .
+      - name: List artefacts
+        run: |
+          find .
       - name: Create GitHub release
         uses: ncipollo/release-action@v1
         with:
           name: "Promtail ${{inputs.release}}"
           body: |
             Statically-linked builds for Promtail, based on the [upstream '${{inputs.release}}'](https://github.com/grafana/loki/releases/tag/${{inputs.release}}) release of the `grafana/loki` project.
-          artifacts: ./dist/*
+          artifacts: ./**
           tag: promtail-${{inputs.release}}
           token: ${{ secrets.GITHUB_TOKEN }}
+
+  publish:
+    name: Publish Promtail binaries to CharmHub
+    runs-on: ubuntu-latest
+    needs: release
+    strategy:
+      matrix:
+        arch: [amd64, arm64]
+    steps:
       - name: Install charmcraft
         run: |
           sudo snap install charmcraft --classic
-      # - name: Upload amd64 assets
-      #   uses: actions/upload-artifact@v3
-      #   env:
-      #     CHARMCRAFT_AUTH: ${{ secrets.CHARMHUB_TOKEN }}
-      #   with:
-      #     name: promtail-amd64
-      #     path: ./loki-k8s-operator/dist/loki_linux_amd64/promtail
-      # - name: Upload arm64 assets
-      #   uses: actions/upload-artifact@v3
-      #   env:
-      #     CHARMCRAFT_AUTH: ${{ secrets.CHARMHUB_TOKEN }}
-      #   with:
-      #     name: promtail-arm64
-      #     path: ./loki-k8s-operator/dist/loki_linux_arm64/promtail
+      - name: Download the promtail-${{matrix.arch}} artefact
+        uses: actions/download-artifact@v3
+        with:
+          name: promtail-${{matrix.arch}}
+          path: .
+      - name: Upload ${{matrix.arch}} resource revision to CharmHub
+        env:
+          CHARMCRAFT_AUTH: ${{ secrets.CHARMHUB_TOKEN }}
+        run: |
+          charmcraft upload-resource loki-k8s promtail-${{matrix.arch}} --file promtail-${{matrix.arch}}      
